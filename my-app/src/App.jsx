@@ -29,10 +29,10 @@ function App() {
         if (localStorage.getItem('token')) {
             checkAuthService(localStorage.getItem('token')) // Убедитесь, что передаете токен
                 .then(() => {
-                    if (user.user == null) {
+                    if (user.user == null || Object.keys(user.user).length === 0) {
                         return;
                     }
-                    console.log(user.user);
+                    console.error("Authentication failed:", user.user);
                     if (window.location.pathname === AUTH_ROUTE) {
                         if (user.user?.role === 'admin') {
                             navigate(ADMIN_ROUTE);
@@ -68,19 +68,11 @@ function App() {
     }
 
     return (
-        <div style={{
-            backgroundColor: '#2B2D30',
-            minHeight: '100vh',
-            width: '100%',
-            overflowX: 'hidden',
-            margin: 0,
-            padding: 0
-        }}>
+        <div style={{ backgroundColor: '#2B2D30', minHeight: '100vh', width: '100%', overflowX: 'hidden' }}>
             <Content>
-                <AppRouter/>
+                <AppRouter />
             </Content>
         </div>
-
     );
 }
 

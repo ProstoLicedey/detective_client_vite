@@ -12,6 +12,7 @@ const AnswerModal = ({ open, onCancel, formData }) => {
     const [loading, setLoading] = useState(false);
     const [update, setUpdate] = useState(0);
     const [confirmOpen, setConfirmOpen] = useState(false); // Для открытия модального окна подтверждения
+    const [notif, contextHolder] = notification.useNotification();
 
     const createAddres = () => {
         setLoading(true);
@@ -30,7 +31,7 @@ const AnswerModal = ({ open, onCancel, formData }) => {
                         onCancel();
                         form.resetFields();
                         question.setAnswerCheck(true);
-                        return notification.success({
+                        notif.success({
                             message: 'Ответы отправленны!',
                         });
 
@@ -39,11 +40,11 @@ const AnswerModal = ({ open, onCancel, formData }) => {
                         setLoading(false);
                         if (error.response && error.response.data && error.response.data.message) {
                             const errorMessage = error.response.data.message;
-                            return notification.error({
+                            notif.error({
                                 message: errorMessage,
                             });
                         } else {
-                            return notification.error({
+                            notif.error({
                                 message: 'Произошла ошибка при выполнении запроса.',
                             });
                         }
@@ -51,7 +52,7 @@ const AnswerModal = ({ open, onCancel, formData }) => {
             })
             .catch(() => {
                 setLoading(false);
-                return notification.error({
+                notif.error({
                     message: 'Пожалуйста, заполните все обязательные поля',
                 });
             });
@@ -68,11 +69,11 @@ const AnswerModal = ({ open, onCancel, formData }) => {
                 setLoading(false);
                 if (error.response && error.response.data && error.response.data.message) {
                     const errorMessage = error.response.data.message;
-                    return notification.error({
+                    notif.error({
                         message: errorMessage,
                     });
                 } else {
-                    return notification.error({
+                    notif.error({
                         message: 'Произошла ошибка при выполнении запроса.',
                     });
                 }
@@ -156,6 +157,7 @@ const AnswerModal = ({ open, onCancel, formData }) => {
                     </Form.Item>
                 </Form>
             </Modal>
+            {contextHolder}
         </>
     );
 };

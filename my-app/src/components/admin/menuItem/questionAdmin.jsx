@@ -1,25 +1,21 @@
-import React, {useContext, useEffect, useRef, useState} from 'react';
-import {Context} from "../../../index.jsx";
-import {getAddressesAPI, userDeleteAPI} from "../../../http/addressesAPI.js";
-import {Button, ConfigProvider, Input, notification, Popconfirm, Space, Table, Typography} from "antd";
-import {DeleteOutlined, SearchOutlined} from "@ant-design/icons";
+import React, { useContext, useEffect, useState } from 'react';
+import { Context } from "../../../index.jsx";
+import { getQuestionsAPI, deleteQuestionAPI } from "../../../http/questionAPI.js";
+import { Button, ConfigProvider, notification, Popconfirm, Table, Typography } from "antd";
+import { DeleteOutlined } from "@ant-design/icons";
 import Title from "antd/es/typography/Title";
 import ruRu from "antd/locale/ru_RU";
-import ModalsAddres from "./modalsAddres.jsx";
-import {deleteQuestionAPI, getQuestionsAPI} from "../../../http/questionAPI.js";
-import {observer} from "mobx-react-lite";
 import QuestionModal from "./questionModal.jsx";
-const { Text} = Typography;
+import { observer } from "mobx-react-lite";
+
+const { Text } = Typography;
 
 const QuestionAdmin = () => {
-    const [searchText, setSearchText] = useState('');
-    const [searchedColumn, setSearchedColumn] = useState('');
-    const [expandedRowKeys, setExpandedRowKeys] = useState([]);
-    const searchInput = useRef(null);
     const [update, setUpdate] = useState(0);
     const [modal, setModal] = useState(false);
     const [loading, setLoading] = useState(true);
-    const {question} = useContext(Context);
+    const [notif, contextHolder] = notification.useNotification(); // уведомления через хук
+    const { question } = useContext(Context);
 
     useEffect(() => {
         getQuestionsAPI()
@@ -29,19 +25,32 @@ const QuestionAdmin = () => {
             })
             .catch((error) => {
                 setLoading(false);
-                if (error.response && error.response.data && error.response.data.message) {
-                    const errorMessage = error.response.data.message;
-                    return notification.error({
-                        message: errorMessage,
-                    });
-                } else {
-                    return notification.error({
-                        message: 'Произошла ошибка при выполнении запроса.',
-                    });
-                }
+                const errorMessage = error?.response?.data?.message || 'Произошла ошибка при выполнении запроса.';
+                notif.error({
+                    message: errorMessage,
+                });
             });
-    }, [update]);
+    }, [update, notif, question]); // добавлено notif в зависимости
 
+    function deleteUser(id) {
+        setLoading(true);
+        deleteQuestionAPI(id)
+            .then(() => {
+                setLoading(false);
+                setUpdate(update + 1);
+                notif.success({
+                    message: 'Вопрос удалён',
+                });
+            })
+            .catch((error) => {
+                setLoading(false);
+                setUpdate(update + 1);
+                const errorMessage = error?.response?.data?.message || 'Произошла ошибка при выполнении запроса.';
+                notif.error({
+                    message: errorMessage,
+                });
+            });
+    }
 
     function deleteUser(id) {
         setLoading(true)
@@ -49,7 +58,7 @@ const QuestionAdmin = () => {
             .then((response) => {
                 setLoading(false)
                 setUpdate(update + 1)
-                return notification.success({
+                notif.success({
                     message: 'Вопрос удалён',
                 });
             })
@@ -58,40 +67,35 @@ const QuestionAdmin = () => {
                 setUpdate(update + 1)
                 if (error.response && error.response.data && error.response.data.message) {
                     const errorMessage = error.response.data.message;
-                    return notification.error({
+                    notif.error({
                         message: errorMessage,
                     });
                 } else {
-                    return notification.error({
+                    notif.error({
                         message: 'Произошла ошибка при выполнении запроса.',
                     });
                 }
             });
 
     }
-
     const columns = [
         {
             title: 'Номер',
             dataIndex: 'id',
             key: 'id',
             width: '10%',
-
         },
         {
             title: 'Вопрос',
             dataIndex: 'question',
             key: 'question',
             width: '65%',
-
         },
-
         {
             title: 'Количество баллов',
             dataIndex: 'numberPoints',
             key: 'numberPoints',
             width: '10%',
-
         },
         {
             title: '',
@@ -99,34 +103,32 @@ const QuestionAdmin = () => {
             width: '15%',
             sortDirections: ['descend', 'ascend'],
             render: (issued, record) => (
-                <>
-                    <Popconfirm
-                        title={`Удалить вопрос?`}
-                        onConfirm={() => deleteUser(record.id)}
-                        okText="Удалить"
-                        cancelText="Отмена"
-                        placement="left"
-                        icon={<DeleteOutlined/>}
-                        okButtonProps={{style: {backgroundColor: '#a8071a'}}}
-                    >
-                        <Button style={{backgroundColor: '#820014'}} type="primary">Удалить</Button>
-                    </Popconfirm>
-                </>
-            )
+                <Popconfirm
+                    title={`Удалить вопрос?`}
+                    onConfirm={() => deleteUser(record.id)}
+                    okText="Удалить"
+                    cancelText="Отмена"
+                    placement="left"
+                    icon={<DeleteOutlined />}
+                    okButtonProps={{ style: { backgroundColor: '#a8071a' } }}
+                >
+                    <Button style={{ backgroundColor: '#820014' }} type="primary">Удалить</Button>
+                </Popconfirm>
+            ),
         },
     ];
 
     return (
-        <div style={{display: 'flex', justifyContent: 'center'}}>
-            <div style={{width: '96%', marginLeft: '2%', marginRight: '2%', maxWidth: 800}}>
-                <Title style={{color: '#FFFFFFD9', textAlign: 'center'}} level={2}>Вопросы</Title>
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <div style={{ width: '96%', marginLeft: '2%', marginRight: '2%', maxWidth: 800 }}>
+                <Title style={{ color: '#FFFFFFD9', textAlign: 'center' }} level={2}>Вопросы</Title>
                 <Button
                     onClick={() => setModal(true)}
                     size={"large"}
-                    style={{backgroundColor: '#3f6600', margin: 10}}
+                    style={{ backgroundColor: '#3f6600', margin: 10 }}
                     type={"primary"}
                 >
-                    Добавть вопрос +
+                    Добавить вопрос +
                 </Button>
                 <ConfigProvider
                     locale={ruRu}
@@ -159,23 +161,24 @@ const QuestionAdmin = () => {
                             },
                         })}
                         bordered
-                        style={{overflowX: 'auto', background: '#2B2D30'}}
+                        style={{ overflowX: 'auto', background: '#2B2D30' }}
                         columns={columns}
                         dataSource={question.questions}
                         rowKey="id"
-
                     />
                 </ConfigProvider>
             </div>
 
-            <QuestionModal open={modal}
-                          onCancel={() => {
-                              setUpdate(update+1)
-                              setModal(false);
-                          }}
+            <QuestionModal
+                open={modal}
+                onCancel={() => {
+                    setUpdate(update + 1);
+                    setModal(false);
+                }}
             />
+            {contextHolder}
         </div>
     );
-}
+};
 
 export default observer(QuestionAdmin);

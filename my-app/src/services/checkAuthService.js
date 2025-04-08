@@ -8,8 +8,8 @@ const checkAuthService = async (user) => {
             const response = await axios.get(`${import.meta.env.VITE_API_URL}api/user/refresh/` + deviceIdentifier, {withCredentials: true})
         localStorage.setItem('token', response.refreshToken);
 
-        user.setUser(response.data.user);
-        user.setIsAuth(true);
+        user.setUser(response.data?.user? response.data?.user : null);
+        user.setIsAuth(response.data?.user? true : false);
 
     } catch (e) {
         return false

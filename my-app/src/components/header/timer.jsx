@@ -12,12 +12,12 @@ const Timer = ({header = false}) => {
         const [remains, setRemains] = useState('00:00:00');
         const isMobile = useMediaQuery({maxWidth: 950});
         const {timer} = useContext(Context)
-
+        const [notif, contextHolder] = notification.useNotification();
         useEffect(() => {
             getTimer()
                 .then((response) => {
 
-                    if(response == null){
+                    if (response == null) {
                         return setRemains('00:00:00')
                     }
                     timer.setTimeFinish(response)
@@ -45,7 +45,6 @@ const Timer = ({header = false}) => {
         useEffect(() => {
             try {
                 if (!timer.timeFinish || isNaN(Date.parse(timer.timeFinish))) {
-                    console.log("Invalid date format");
                     setRemains("00:00:00");
                     return;
                 }
@@ -74,14 +73,14 @@ const Timer = ({header = false}) => {
             if (remains != "00:00:00") {
                 timer.setTimerActive(true)
                 if (remains === "00:10:00") {
-                    notification.info({
+                    notif.info({
                         message: 'У вас осталось 10 минут',
                         placement: 'top',
                         showProgress: true,
                     });
                 }
                 if (remains === "00:00:01") {
-                    notification.warning({
+                    notif.warning({
                         message: 'Время вышло',
                         duration: 'Необходимо сдать бланки',
                         placement: 'top',
@@ -138,6 +137,7 @@ const Timer = ({header = false}) => {
                 >
                     {remains}
                 </Title>
+                {contextHolder}
             </div>
         );
     }

@@ -13,7 +13,7 @@ const Trip = () => {
     const [popconfirmVisible, setPopconfirmVisible] = useState(false);
     const [loading, setLoading] = useState(false);
     const {user, timer} = useContext(Context);
-
+    const [notif, contextHolder] = notification.useNotification();
 
     useEffect(() => {
         setLoading(true)
@@ -27,13 +27,13 @@ const Trip = () => {
                 if (error.response && error.response.data && error.response.data.message) {
                     // Если сервер вернул сообщение об ошибке
                     const errorMessage = error.response.data.message;
-                    return notification.error({
+                    notif.error({
                         message: errorMessage,
                         placement: 'top'
                     });
                 } else {
                     // Если нет специфического сообщения об ошибке от сервера
-                    return notification.error({
+                    notif.error({
                         message: 'Произошла ошибка при выполнении запроса.',
                         placement: 'top'
                     });
@@ -53,13 +53,13 @@ const Trip = () => {
                 if (error.response && error.response.data && error.response.data.message) {
                     // Если сервер вернул сообщение об ошибке
                     const errorMessage = error.response.data.message;
-                    return notification.error({
+                    notif.error({
                         message: errorMessage,
                         placement: 'top'
                     });
                 } else {
                     // Если нет специфического сообщения об ошибке от сервера
-                    return notification.error({
+                    notif.error({
                         message: 'Произошла ошибка при выполнении запроса.',
                         placement: 'top'
                     });
@@ -75,7 +75,7 @@ const Trip = () => {
         if (!visible) {
             setPopconfirmVisible(false);
         } else if (!district || !number) {
-            return notification.error({
+            notif.error({
                 message: 'Введите район и номер дома',
                 showProgress: true,
             });
@@ -166,6 +166,7 @@ const Trip = () => {
                     </Row>
                 </Form>
             </Tooltip>
+            {/*{contextHolder}*/}
         </div>
     );
 };

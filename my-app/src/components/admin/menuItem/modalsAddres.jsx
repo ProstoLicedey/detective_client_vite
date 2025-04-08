@@ -12,6 +12,7 @@ const {Option} = Select;
 const ModalsAddres = ({open, onCancel}) => {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
+    const [notif, contextHolder] = notification.useNotification();
     const createAddres = () => {
         setLoading(true)
         form
@@ -30,11 +31,11 @@ const ModalsAddres = ({open, onCancel}) => {
                         setLoading(false)
                         if (error.response && error.response.data && error.response.data.message) {
                             const errorMessage = error.response.data.message;
-                            return notification.error({
+                            notif.error({
                                 message: errorMessage,
                             });
                         } else {
-                            return notification.error({
+                            notif.error({
                                 message: 'Произошла ошибка при выполнении запроса.',
                             });
                         }
@@ -42,7 +43,7 @@ const ModalsAddres = ({open, onCancel}) => {
             })
             .catch(() => {
                 setLoading(false)
-                return notification.error({
+                notif.error({
                     message: 'Пожалуйста заполните все обязательные поля'
                 });
             })
@@ -152,6 +153,7 @@ const ModalsAddres = ({open, onCancel}) => {
                     </Button>
                 </Form.Item>
             </Form>
+            {contextHolder}
         </Modal>
     );
 };

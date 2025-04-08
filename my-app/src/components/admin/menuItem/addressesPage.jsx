@@ -19,6 +19,7 @@ const AddressesPage = () => {
     const [update, setUpdate] = useState(0);
     const [modal, setModal] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [notif, contextHolder] = notification.useNotification();
     const {admin} = useContext(Context);
 
     useEffect(() => {
@@ -31,11 +32,11 @@ const AddressesPage = () => {
                 setLoading(false)
                 if (error.response && error.response.data && error.response.data.message) {
                     const errorMessage = error.response.data.message;
-                    return notification.error({
+                    notif.error({
                         message: errorMessage,
                     });
                 } else {
-                    return notification.error({
+                    notif.error({
                         message: 'Произошла ошибка при выполнении запроса.',
                     });
                 }
@@ -48,7 +49,7 @@ const AddressesPage = () => {
             .then((response) => {
                 setLoading(false)
                 setUpdate(update + 1)
-                return notification.success({
+                notif.success({
                     message: 'Адрес удалён',
                 });
             })
@@ -57,11 +58,11 @@ const AddressesPage = () => {
                 setUpdate(update + 1)
                 if (error.response && error.response.data && error.response.data.message) {
                     const errorMessage = error.response.data.message;
-                    return notification.error({
+                    notif.error({
                         message: errorMessage,
                     });
                 } else {
-                    return notification.error({
+                    notif.error({
                         message: 'Произошла ошибка при выполнении запроса.',
                     });
                 }
@@ -268,6 +269,7 @@ const AddressesPage = () => {
                            setModal(false);
                        }}
             />
+            {contextHolder}
         </div>
     );
 }

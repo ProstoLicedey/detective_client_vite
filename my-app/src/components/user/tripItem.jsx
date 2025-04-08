@@ -40,6 +40,7 @@ const TripItem = ({ thisTrip }) => {
                     </Text>
                 </Collapse.Panel>
             </Collapse>
+            {contextHolder}
         </ConfigProvider>
     );
 };

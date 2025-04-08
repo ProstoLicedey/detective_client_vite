@@ -1,60 +1,58 @@
-import React, {useContext, useState} from 'react';
-import {Button, Form, Input, Space, notification} from 'antd';
-import {loginAPI} from "../http/userAPI.js";
-import {ADMIN_ROUTE, USER_ROUTE} from "../utils/consts.js";
-import {useNavigate} from "react-router-dom";
-import {Context} from "../index.jsx";
+import React, { useContext, useState } from 'react';
+import { Button, Form, Input, notification } from 'antd';
+import { loginAPI } from "../http/userAPI.js";
+import { ADMIN_ROUTE, USER_ROUTE } from "../utils/consts.js";
+import { useNavigate } from "react-router-dom";
+import { Context } from "../index.jsx";
 
 const AuthPage = () => {
     const [form] = Form.useForm();
-    const {user} = useContext(Context)
-    const navigate = useNavigate()
+    const { user } = useContext(Context);
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [notif, contextHolder] = notification.useNotification();
+
     const login = async () => {
-        setLoading(true)
+        setLoading(true);
         form
             .validateFields()
             .then((values) => {
                 loginAPI(values.login, values.password)
                     .then((response) => {
-                        localStorage.setItem('token', response.accessToken)
-                        user.setUser(response.user)
-                        user.setIsAuth(true)
-                        console.log(user.user)
-                        if (user.user?.role === 'admin') {
-                            navigate(ADMIN_ROUTE)
+                        localStorage.setItem('token', response.accessToken);
+                        user.setUser(response.user);
+                        user.setIsAuth(true);
+
+                        const role = response.user?.role;
+                        if (role === 'admin') {
+                            navigate(ADMIN_ROUTE);
                         } else {
-                            navigate(USER_ROUTE)
+                            navigate(USER_ROUTE);
                         }
-                        setLoading(false)
+                        setLoading(false);
                     })
                     .catch((error) => {
-                        setLoading(false)
-                        if (error.response && error.response.data && error.response.data.message) {
-                            // Если сервер вернул сообщение об ошибке
-                            const errorMessage = error.response.data.message;
-                            return notification.error({
-                                message: errorMessage,
-                                placement: 'top'
-                            });
-                        } else {
-                            // Если нет специфического сообщения об ошибке от сервера
-                            return notification.error({
-                                message: 'Произошла ошибка при выполнении запроса.',
-                                placement: 'top'
-                            });
-                        }
-                    })
+                        setLoading(false);
 
+                            if (error.response?.data?.message) {
+                                notif.error({
+                                    message: error.response.data.message,
+                                });
+                            } else {
+                                notif.error({
+                                    message: 'Произошла ошибка при выполнении запроса.',
+                                });
+                            }
+                    });
             })
             .catch(() => {
-                setLoading(false)
-                return notification.error({
-                    message: 'Пожалуйста заполните все поля',
-                    placement: 'top'
-                });
-            })
-    }
+                setLoading(false);
+                notif.error({
+                        message: 'Пожалуйста заполните все обязательные поля',
+                    });
+            });
+    };
+
     return (
         <div
             style={{
@@ -67,43 +65,35 @@ const AuthPage = () => {
                 minWidth: 300
             }}
         >
+            {contextHolder}
             <Form
                 form={form}
                 layout="vertical"
                 requiredMark={false}
-                style={{width: '100%', maxWidth: 500, padding: '0 20px'}}
+                style={{ width: '100%', maxWidth: 500, padding: '0 20px' }}
             >
                 <Form.Item
-                    label={<span style={{color: '#FFFFFFD9', fontSize: '1.3rem'}}>Логин</span>}
+                    label={<span style={{ color: '#FFFFFFD9', fontSize: '1.3rem' }}>Логин</span>}
                     name="login"
-                    rules={[
-                        {
-                            message: '',
-                            required: true,
-                        },
-                    ]}
+                    rules={[{ required: true, message: '' }]}
                 >
-                    <Input maxLength={30} size={"large"} style={{width: '100%'}}/>
+                    <Input maxLength={30} size="large" />
                 </Form.Item>
                 <Form.Item
-                    label={<span style={{color: '#FFFFFFD9', fontSize: '1.3rem'}}>Пароль</span>}
+                    label={<span style={{ color: '#FFFFFFD9', fontSize: '1.3rem' }}>Пароль</span>}
                     name="password"
-                    rules={[
-                        {
-                            message: '',
-                            required: true,
-                        },
-                    ]}
+                    rules={[{ required: true, message: '' }]}
                 >
-                    <Input.Password maxLength={100} size={"large"} style={{width: '100%'}}/>
+                    <Input.Password maxLength={100} size="large" />
                 </Form.Item>
                 <Form.Item>
-                    <Button onClick={login}
-                            size={"large"}
-                            style={{backgroundColor: '#5b8c00'}}
-                            type={"primary"}
-                            block
-                            loading={loading}
+                    <Button
+                        onClick={login}
+                        size="large"
+                        style={{ backgroundColor: '#5b8c00' }}
+                        type="primary"
+                        block
+                        loading={loading}
                     >
                         Войти
                     </Button>

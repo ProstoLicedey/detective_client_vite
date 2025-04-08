@@ -22,7 +22,7 @@ const HeaderPage = () => {
 
     const [update, setUpdate] = useState(0);
     const [modal, setModal] = useState(false);
-
+    const [notif, contextHolder] = notification.useNotification();
     const [gameActive, setGameActive] = useState(false);
 
 
@@ -38,12 +38,12 @@ const HeaderPage = () => {
                 if (error.response && error.response.data && error.response.data.message) {
 
                     const errorMessage = error.response.data.message;
-                    return notification.error({
+                    notif.error({
                         message: errorMessage, placement: 'top'
                     });
                 } else {
                     // Если нет специфического сообщения об ошибке от сервера
-                    return notification.error({
+                    notif.error({
                         message: 'Произошла ошибка при выполнении запроса.', placement: 'top'
                     });
                 }
@@ -135,6 +135,7 @@ const HeaderPage = () => {
                          setModal(false);
                      }}
         />
+        {contextHolder}
     </Header>)
         ;
 };

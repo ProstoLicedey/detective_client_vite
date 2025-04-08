@@ -33,3 +33,17 @@ export  const  getAnsewrsAPI = async (id) =>{
     return data
 
 }
+
+export  const  putAnsewrsAPI = async (answers) =>{
+
+    const {data} =   await $host.put('api/questions/answer/', { answers } )
+    return data
+
+}
+
+export  const  daleteAnsewrsAPI = async (id) =>{
+
+    const {data} =   await $host.delete('api/questions/answer/' + id )
+    return data
+
+}

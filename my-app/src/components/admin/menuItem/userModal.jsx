@@ -7,6 +7,7 @@ import {ADMIN_ROUTE, USER_ROUTE} from "../../../utils/consts.js";
 const UserModal = ({open, onCancel}) => {
 
     const [form] = Form.useForm();
+    const [notif, contextHolder] = notification.useNotification();
 
     const createUser = () => {
         form
@@ -16,23 +17,23 @@ const UserModal = ({open, onCancel}) => {
                 createUserAPI(values.login, values.password)
                     .then((response) => {
                         onCancel()
-                        form.setFieldsValue({login:'',password:''});
+                        form.setFieldsValue({login: '', password: ''});
                     })
                     .catch((error) => {
                         if (error.response && error.response.data && error.response.data.message) {
                             const errorMessage = error.response.data.message;
-                            return notification.error({
+                            notif.error({
                                 message: errorMessage,
                             });
                         } else {
-                            return notification.error({
+                            notif.error({
                                 message: 'Произошла ошибка при выполнении запроса.',
                             });
                         }
                     });
             })
             .catch(() => {
-                return notification.error({
+                notif.error({
                     message: 'Пожалуйста заполните все поля',
                     placement: 'top'
                 });
@@ -75,7 +76,7 @@ const UserModal = ({open, onCancel}) => {
                     <Input maxLength={30} size={"large"} style={{width: '100%'}}/>
                 </Form.Item>
 
-                <Row gutter={8} align="middle" style={{ marginBottom: '16px' }}>
+                <Row gutter={8} align="middle" style={{marginBottom: '16px'}}>
                     <Form.Item
                         label={"Пароль"}
                         name="password"
@@ -85,17 +86,20 @@ const UserModal = ({open, onCancel}) => {
                                 required: true,
                             },
                         ]}
-                        style={{ flex: 1, marginRight: '8px' }}
+                        style={{flex: 1, marginRight: '8px'}}
                     >
-                        <Input.Password maxLength={100} size={"large"} style={{width: '100%'}} />
+                        <Input.Password maxLength={100} size={"large"} style={{width: '100%'}}/>
                     </Form.Item>
-                    <Button shape="circle" onClick={generateRandomPassword} style={{ marginLeft: '8px' }} size={"small"}><SyncOutlined style={{ fontWeight: 'bold' }}/></Button>
+                    <Button shape="circle" onClick={generateRandomPassword} style={{marginLeft: '8px'}}
+                            size={"small"}><SyncOutlined style={{fontWeight: 'bold'}}/></Button>
                 </Row>
 
                 <Form.Item>
-                    <Button onClick={createUser} size={"large"} style={{backgroundColor: '#5b8c00'}} type={"primary"} block>Добавить</Button>
+                    <Button onClick={createUser} size={"large"} style={{backgroundColor: '#5b8c00'}} type={"primary"}
+                            block>Добавить</Button>
                 </Form.Item>
             </Form>
+            {contextHolder}
         </Modal>
     );
 };
