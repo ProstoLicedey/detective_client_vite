@@ -76,15 +76,15 @@ const Timer = ({header = false}) => {
                     notif.info({
                         message: 'У вас осталось 10 минут',
                         placement: 'top',
-                        showProgress: true,
+                        open: true, // Заменено visible на open
                     });
                 }
                 if (remains === "00:00:01") {
                     notif.warning({
                         message: 'Время вышло',
-                        duration: 'Необходимо сдать бланки',
+                        description: 'Необходимо сдать бланки',
                         placement: 'top',
-                        showProgress: true,
+                        open: true, // Заменено visible на open
                     });
                 }
                 const timerInterval = setInterval(() => {

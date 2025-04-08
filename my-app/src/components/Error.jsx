@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Navigate, BrowserRouter } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { AUTH_ROUTE } from "../utils/consts.js";
 
 class ErrorBoundary extends Component {
@@ -15,12 +15,7 @@ class ErrorBoundary extends Component {
 
     render() {
         if (this.state.hasError) {
-            // Перенаправляем пользователя на страницу авторизации
-            return (
-                <BrowserRouter>
-                    <Navigate to={AUTH_ROUTE} />
-                </BrowserRouter>
-            );
+            return <Navigate to={AUTH_ROUTE} />;
         }
         return this.props.children;
     }

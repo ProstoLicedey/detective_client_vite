@@ -119,7 +119,7 @@ const HeaderPage = () => {
         }
         <Modal
             title="Выход из аккаунта"
-            open={modalVisible} // Заменить visible на open
+            open={modalVisible} // Заменено visible на open
             onOk={handleLogout}
             onCancel={() => setModalVisible(false)}
             okText="Выйти"
