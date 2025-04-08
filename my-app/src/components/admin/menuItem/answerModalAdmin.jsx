@@ -1,99 +1,134 @@
 import React, {useContext, useEffect, useState} from 'react';
 import {Context} from "../../../index.jsx";
-import {Button, Card, Divider, Form, InputNumber, Modal, notification, Space, Typography} from "antd";
-import {getAnsewrsAPI, getQuestionsAPI, postAnswerAPI} from "../../../http/questionAPI.js";
+import {
+    Button, Card, Divider, Form, InputNumber, Modal, notification,
+    Popconfirm, Space, Typography
+} from "antd";
+import {
+    getAnsewrsAPI, putAnsewrsAPI,
+    daleteAnsewrsAPI // <--- добавили импорт
+} from "../../../http/questionAPI.js";
 import {observer} from "mobx-react-lite";
 
 const {Text} = Typography;
 
 const AnswerModalAdmin = ({open, onCancel, answerId}) => {
-    const {question, user} = useContext(Context);
+    const {question} = useContext(Context);
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [update, setUpdate] = useState(0);
-    const [confirmOpen, setConfirmOpen] = useState(false); // Для открытия модального окна подтверждения
+
+    const [confirmVisible, setConfirmVisible] = useState(false);
+    const [confirmDisabled, setConfirmDisabled] = useState(true);
+    const [notif, contextHolder] = notification.useNotification();
+    useEffect(() => {
+        let timer;
+        if (confirmVisible) {
+            setConfirmDisabled(true);
+            timer = setTimeout(() => {
+                setConfirmDisabled(false);
+            }, 5000); // 5 секунд
+        } else {
+            setConfirmDisabled(true);
+        }
+
+        return () => clearTimeout(timer);
+    }, [confirmVisible]);
+
 
     const putQuestion = () => {
         setLoading(true);
         form
             .validateFields()
             .then((values) => {
-                const answers = question.questions.map((q, index) => ({
-                    questionId: q.id,         // Assuming each question has an 'id' field
-                    answerText: values[`answer${index}`], // Answer from the form
-                    userId: user.user.id,     // Assuming user is available via context or props
+                const resultArray = question.answers.map((answer, index) => ({
+                    answerId: answer.id,
+                    pointsAwarded: values[`result${index}`],
                 }));
 
-                postAnswerAPI(answers)
-                    .then((response) => {
+                putAnsewrsAPI(resultArray)
+                    .then(() => {
                         setLoading(false);
                         onCancel();
                         form.resetFields();
-                        question.setAnswerCheck(true);
-                        return notification.success({
-                            message: 'Ответы отправленны!',
+                        notif.success({
+                            message: 'Результаты сохранены!',
                         });
-
+                        question.setAnswerCheck(true);
                     })
                     .catch((error) => {
                         setLoading(false);
-                        if (error.response && error.response.data && error.response.data.message) {
-                            const errorMessage = error.response.data.message;
-                            return notification.error({
-                                message: errorMessage,
-                            });
-                        } else {
-                            return notification.error({
-                                message: 'Произошла ошибка при выполнении запроса.',
+                        if (error.response?.data?.message) {
+                           notif.error({
+                                message: error.response.data.message,
                             });
                         }
+                        notif.error({
+                            message: 'Ошибка при сохранении результатов.',
+                        });
                     });
             })
             .catch(() => {
                 setLoading(false);
-                return notification.error({
+                notif.error({
                     message: 'Пожалуйста, заполните все обязательные поля',
                 });
+            });
+    };
+
+    const handleDelete = () => {
+        if (!answerId) return;
+        setLoading(true);
+        daleteAnsewrsAPI(answerId)
+            .then(() => {
+                notif.success({message: 'Ответы удалены!'});
+                question.setAnswers([]);
+                form.resetFields();
+                onCancel();
+            })
+            .catch((error) => {
+                if (error.response?.data?.message) {
+                    notif.error({
+                        message: error.response.data.message,
+                    });
+                }
+                notif.error({
+                    message: 'Ошибка при удалении ответов.',
+                });
+            })
+            .finally(() => {
+                setLoading(false);
             });
     };
 
 
     useEffect(() => {
         if (answerId != null) {
+            setLoading(true);
             getAnsewrsAPI(answerId)
                 .then((response) => {
                     question.setAnswers(response);
-                    setLoading(false);
+                    const formValues = {};
+                    response.forEach((answer, index) => {
+                        formValues[`result${index}`] = answer.pointsAwarded;
+                    });
+                    form.setFieldsValue(formValues);
                 })
                 .catch((error) => {
-                    setLoading(false);
-                    if (error.response && error.response.data && error.response.data.message) {
-                        const errorMessage = error.response.data.message;
-                        return notification.error({
-                            message: errorMessage,
-                        });
-                    } else {
-                        return notification.error({
-                            message: 'Произошла ошибка при выполнении запроса.',
+                    if (error.response?.data?.message) {
+                        notif.error({
+                            message: error.response.data.message,
                         });
                     }
+                    notif.error({
+                        message: 'Произошла ошибка при выполнении запроса.',
+                    });
+                })
+                .finally(() => {
+                    setLoading(false);
                 });
         }
     }, [update, answerId]);
-
-
-    const handleSubmit = () => {
-        setConfirmOpen(true); // Открыть окно подтверждения
-    };
-
-    const handleConfirm = () => {
-        setConfirmOpen(false);
-        putQuestion(); // Отправить данные, если подтверждено
-    };
-
-    const handleCancelConfirm = () => {
-        setConfirmOpen(false); // Закрыть окно подтверждения без отправки
-    };
 
     return (
         <Modal
@@ -106,57 +141,72 @@ const AnswerModalAdmin = ({open, onCancel, answerId}) => {
                 form={form}
                 layout="vertical"
                 requiredMark={false}
-                style={{width: '100%', maxWidth: 500,}}
+                style={{width: '100%', maxWidth: 500}}
                 size={'small'}
             >
                 {question.answers && question.answers.map((answer, index) => (
                     <Space direction="vertical" key={index} style={{width: '100%'}}>
-                        <Card title={`${index + 1}) ${answer.question.question}`}
-                              variant="borderless"
-                              size={"small"}
+                        <Card
+                            title={`${index + 1}) ${answer.question.question}`}
+                            variant="borderless"
+                            size={"small"}
                         >
                             <Text level={5}>{answer.answer}</Text>
-
                             <Divider/>
                             <Form.Item
+                                label={"Баллы:"}
                                 key={`result-${index}`}
                                 name={`result${index}`}
                                 style={{display: 'flex', justifyContent: 'space-between', margin: 5}}
+                                rules={[{required: true, message: 'Пожалуйста, укажите баллы'}]}
+                                initialValue={answer.pointsAwarded}
                             >
-                                <Space size={"small"} style={{width: '100%'}}>
-                                    <span style={{flex: 1}}>Результат:</span> {/* Лейбл слева */}
-                                    <InputNumber
-
-                                        value={answer.pointsAwarded}
-                                        min={0}
-                                        max={answer.question.numberPoints}
-                                        suffix={"/" + answer.question.numberPoints}
-                                    />
-                                </Space>
+                                <InputNumber
+                                    suffix={"/" + answer.question.numberPoints}
+                                    min={0}
+                                    max={answer.question.numberPoints}
+                                />
                             </Form.Item>
                         </Card>
-
                     </Space>
                 ))}
 
                 <Form.Item>
-                    <Button
-                        onClick={handleSubmit}
-                        size={"large"}
-                        style={{backgroundColor: '#5b8c00'}}
-                        type={"primary"}
-                        block
-                        loading={loading}
-                    >
-                        Сохранить
-                    </Button>
+                    <Space style={{width: '100%'}} direction="vertical">
+                        <Button
+                            onClick={putQuestion}
+                            size="large"
+                            style={{backgroundColor: '#5b8c00'}}
+                            type="primary"
+                            block
+                            loading={loading}
+                        >
+                            Сохранить
+                        </Button>
+                        <Divider/>
+                        <Popconfirm
+                            title="Удалить все ответы?"
+                            description="Вы уверены, что хотите удалить все ответы? Это действие необратимо."
+                            onConfirm={handleDelete}
+                            okButtonProps={{
+                                style: {backgroundColor: '#a8071a'},
+                                disabled: confirmDisabled,
+                            }}
+                            okText={confirmDisabled ? `Подождите...` : "Удалить"}
+                            cancelText="Отмена"
+                            onOpenChange={(visible) => setConfirmVisible(visible)}
+                        >
+                            <Button danger block loading={loading}>
+                                Удалить ответы
+                            </Button>
+                        </Popconfirm>
+
+                    </Space>
                 </Form.Item>
             </Form>
+            {contextHolder}
         </Modal>
-
-
-    )
-        ;
+    );
 };
 
-export default  observer(AnswerModalAdmin);
+export default observer(AnswerModalAdmin);

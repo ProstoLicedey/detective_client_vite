@@ -14,6 +14,7 @@ const TripAdmin = () => {
     const {admin, user} = useContext(Context);
     const [tripAdminConnected, setTripAdminConnected] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [notif, contextHolder] = notification.useNotification();
 
     useEffect(() => {
         if (Object.keys(user.user).length !== 0 && !tripAdminConnected) {
@@ -32,12 +33,12 @@ const TripAdmin = () => {
                     setLoading(false)
                     if (error.response && error.response.data && error.response.data.message) {
                         const errorMessage = error.response.data.message;
-                        return notification.error({
+                        notif.error({
                             message: errorMessage,
                         });
                     } else {
-                        // Если нет специфического сообщения об ошибке от сервера
-                        return notification.error({
+``
+                         notif.error({
                             message: 'Произошла ошибка при выполнении запроса.',
                         });
                     }
@@ -56,12 +57,11 @@ const TripAdmin = () => {
                 setLoading(false)
                 if (error.response && error.response.data && error.response.data.message) {
                     const errorMessage = error.response.data.message;
-                    return notification.error({
+                    notif.error({
                         message: errorMessage,
                     });
                 } else {
-                    // Если нет специфического сообщения об ошибке от сервера
-                    return notification.error({
+                    notif.error({
                         message: 'Произошла ошибка при выполнении запроса.',
                     });
                 }
@@ -256,6 +256,7 @@ const TripAdmin = () => {
                     />
                 </ConfigProvider>
             </div>
+            {contextHolder}
         </div>
     );
 }

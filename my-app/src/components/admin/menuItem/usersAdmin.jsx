@@ -41,7 +41,7 @@ const UsersAdmin = () => {
     const [modalUser, setModalUser] = useState(false);
     const [modalAnswer, setModalAnswer] = useState(false);
     const [answerId, setAnswerId] = useState(null);
-
+    const [notif, contextHolder] = notification.useNotification();
 
     const [searchText, setSearchText] = useState('');
     const [searchedColumn, setSearchedColumn] = useState('');
@@ -61,12 +61,11 @@ const UsersAdmin = () => {
                     setLoading(false)
                     if (error.response && error.response.data && error.response.data.message) {
                         const errorMessage = error.response.data.message;
-                        return notification.error({
+                        notif.error({
                             message: errorMessage,
                         });
                     } else {
-                        // Если нет специфического сообщения об ошибке от сервера
-                        return notification.error({
+                        notif.error({
                             message: 'Произошла ошибка при выполнении запроса.',
                         });
                     }
@@ -80,8 +79,8 @@ const UsersAdmin = () => {
         userDeleteAPI(id)
             .then((response) => {
                 setLoading(false)
-                return notification.success({
-                    message: 'Адрес удалена',
+                notif.success({
+                    message: 'Пользователь удалена',
                 });
             })
             .catch((error) => {
@@ -89,17 +88,20 @@ const UsersAdmin = () => {
                 if (error.response && error.response.data && error.response.data.message) {
                     const errorMessage = error.response.data.message;
                     setUpdate(update + 1)
-                    return notification.error({
+                    notif.error({
                         message: errorMessage,
                     });
                 } else {
                     // Если нет специфического сообщения об ошибке от сервера
-                    return notification.error({
+                    notif.error({
                         message: 'Произошла ошибка при выполнении запроса.',
                     });
                 }
-            })
-        setUpdate(update + 1)
+            }).finally(() => {
+            setLoading(false)
+            setUpdate(update + 1)
+        })
+
     }
 
 
@@ -375,6 +377,7 @@ const UsersAdmin = () => {
                          }}
                          answerId={answerId}
             />
+            {contextHolder}
         </div>
     );
 }

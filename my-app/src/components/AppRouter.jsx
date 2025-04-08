@@ -43,7 +43,6 @@ const AppRouter = () => {
     }
 
     const routesToCheck = role === 'admin' ? adminRoutes : (role === 'user' ? userRoutes : publicRoutes);
-
     return (
         <Routes>
             {routesToCheck.map(({ path, Component }) => (

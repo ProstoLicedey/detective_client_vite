@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {AUTH_ROUTE} from "../utils/consts.js";
+import { Navigate, BrowserRouter } from 'react-router-dom';
+import { AUTH_ROUTE } from "../utils/consts.js";
 
 class ErrorBoundary extends Component {
     constructor(props) {
@@ -15,10 +15,12 @@ class ErrorBoundary extends Component {
 
     render() {
         if (this.state.hasError) {
-            // eslint-disable-next-line react-hooks/rules-of-hooks
-            const navigate = useNavigate();
-            navigate(AUTH_ROUTE);
-            return null;
+            // Перенаправляем пользователя на страницу авторизации
+            return (
+                <BrowserRouter>
+                    <Navigate to={AUTH_ROUTE} />
+                </BrowserRouter>
+            );
         }
         return this.props.children;
     }
