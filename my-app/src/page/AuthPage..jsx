@@ -20,6 +20,7 @@ const AuthPage = () => {
                 loginAPI(values.login, values.password)
                     .then((response) => {
                         localStorage.setItem('token', response.accessToken);
+                        localStorage.setItem('refreshToken', response.refreshToken); // Сохраняем refreshToken
                         user.setUser(response.user);
                         user.setIsAuth(true);
 

@@ -1,5 +1,4 @@
 import AppRouter from "./components/AppRouter.jsx";
-import { BrowserRouter, useNavigate } from "react-router-dom";
 import { Content } from "antd/es/layout/layout";
 import { useContext, useEffect, useState } from "react";
 import { Spin } from "antd";
@@ -8,52 +7,47 @@ import { Context } from "./index.jsx";
 import { observer } from "mobx-react-lite";
 import { ADMIN_ROUTE, USER_ROUTE, AUTH_ROUTE } from "./utils/consts.js";
 import { v4 as uuidv4 } from 'uuid';
+import { useNavigate } from "react-router-dom";
 
 function App() {
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null); // Для отслеживания ошибок аутентификации
+    const [error, setError] = useState(null);
     const { user } = useContext(Context);
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (!user || !user.user) {
-            return; // Выход из эффекта, если user еще не загружен
-        }
+        const initializeAuth = async () => {
+            let deviceId = localStorage.getItem('deviceId');
+            if (!deviceId) {
+                const newDeviceId = uuidv4();
+                localStorage.setItem('deviceId', newDeviceId);
+            }
 
-        let deviceId = localStorage.getItem('deviceId');
-        if (!deviceId) {
-            const newDeviceId = uuidv4();
-            localStorage.setItem('deviceId', newDeviceId);
-        }
-
-        if (localStorage.getItem('token')) {
-            checkAuthService(localStorage.getItem('token')) // Убедитесь, что передаете токен
-                .then(() => {
-                    if (user.user == null || Object.keys(user.user).length === 0) {
-                        return;
-                    }
-                    console.error("Authentication failed:", user.user);
-                    if (window.location.pathname === AUTH_ROUTE) {
-                        if (user.user?.role === 'admin') {
-                            navigate(ADMIN_ROUTE);
-                        } else {
-                            navigate(USER_ROUTE);
+            if (localStorage.getItem('token')) {
+                try {
+                    const isAuthValid = await checkAuthService(user);
+                    if (isAuthValid && user.user && Object.keys(user.user).length > 0) {
+                        if (window.location.pathname === AUTH_ROUTE) {
+                            navigate(user.user.role === 'admin' ? ADMIN_ROUTE : USER_ROUTE);
                         }
                     }
-                })
-                .catch((error) => {
+                } catch (error) {
                     console.error("Authentication failed:", error);
                     setError("Ошибка аутентификации. Пожалуйста, попробуйте снова.");
-                })
-                .finally(() => setLoading(false));
-        } else {
-            setLoading(false);
-        }
+                } finally {
+                    setLoading(false);
+                }
+            } else {
+                setLoading(false);
+            }
+        };
+
+        initializeAuth();
     }, [user, navigate]);
 
     if (loading) {
         return (
-            <div >
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
                 <Spin size="large" />
             </div>
         );
