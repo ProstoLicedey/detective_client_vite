@@ -1,42 +1,25 @@
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import {Button, Form, Input, InputNumber, Modal, notification, Row, Select, Typography} from "antd";
 import {createAddressrAPI} from "../../../http/addressesAPI.js";
 import TextArea from "antd/es/input/TextArea";
 import {createQuestionAPI} from "../../../http/questionAPI.js";
-import {Context} from "../../../index.jsx";
-import {getGames} from "../../../http/gameAPI.js";
+import {createGameAPI} from "../../../http/gameAPI.js";
 
 const { Text} = Typography;
 const {Option} = Select;
 
-const QuestionModal = ({open, onCancel, quizzChech}) => {
+const GamesModal = ({open, onCancel}) => {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [notif, contextHolder] = notification.useNotification();
-    const { admin } = useContext(Context);
 
-    useEffect(() => {
-        getGames()
-            .then((response) => {
-                admin.setGames(response);
-                setLoading(false);
-            })
-            .catch((error) => {
-                setLoading(false);
-                const errorMessage = error?.response?.data?.message || 'Произошла ошибка при выполнении запроса.';
-                notif.error({
-                    message: errorMessage,
-                });
-            });
-    }, []);
-
-    const createAddres = () => {
+    const createGame = () => {
         setLoading(true)
         form
             .validateFields()
             .then((values) => {
 
-                createQuestionAPI(values.question, values.numberPoints, quizzChech ? values.gameId : 1)
+                createGameAPI(values.name, values.description)
                     .then((response) => {
 
                         setLoading(false)
@@ -70,7 +53,7 @@ const QuestionModal = ({open, onCancel, quizzChech}) => {
 
     return (
         <Modal
-            title={"Добавление вопроса"}
+            title={"Добавление игры"}
             open={open}
             footer={null}
             onCancel={() => onCancel()}
@@ -82,10 +65,22 @@ const QuestionModal = ({open, onCancel, quizzChech}) => {
                 style={{width: '100%', maxWidth: 500, padding: '0 20px'}}
             >
 
+                <Form.Item
+                    label={"Название"}
+                    name="name"
+                    rules={[
+                        {
+                            message: '',
+                            required: true,
+                        },
+                    ]}
+                >
+                    <Input maxLength={30} size={"large"} style={{width: '100%'}}/>
+                </Form.Item>
 
                 <Form.Item
-                    label="Вопрос"
-                    name="question"
+                    label="Описание"
+                    name="description"
                     rules={[
                         {
                             required: true,
@@ -100,49 +95,10 @@ const QuestionModal = ({open, onCancel, quizzChech}) => {
                         style={{height: 120, resize: 'none'}}
                     />
                 </Form.Item>
-                <Form.Item
-                    label="Количество баллов"
-                    name="numberPoints"
-                    min={1}
-                    rules={[
-                        {
-                            required: true,
-                            message: '',
-                        },
-                    ]}
-                    style={{width: '100%'}}
-                >
-                    <InputNumber
-                        showCount
-                        maxLength={1000}
-
-                    />
-                </Form.Item>
-
-                {quizzChech !== false && (
-                    <Form.Item
-                        label="Игра"
-                        name="gameId"
-                        rules={[{ required: true, message: '' }]}
-                    >
-                        <Select
-                            placeholder="Выберите игру"
-                            style={{ width: '100%' }}
-                            options={admin.games
-                                .filter((game) => game.id !== 1)
-                                .map((game) => ({
-                                    label: game.name,
-                                    value: game.id,
-                                }))
-                            }
-                        />
-                    </Form.Item>
-                )}
-
 
                 <Form.Item>
                     <Button
-                        onClick={createAddres}
+                        onClick={createGame}
                         size={"large"}
                         style={{backgroundColor: '#5b8c00'}}
                         type={"primary"}
@@ -157,4 +113,4 @@ const QuestionModal = ({open, onCancel, quizzChech}) => {
         </Modal>
     );
 };
-export default QuestionModal;
+export default GamesModal;

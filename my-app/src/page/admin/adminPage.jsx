@@ -12,13 +12,17 @@ import moment from "moment/moment";
 import {Context} from "../../index.jsx";
 import {observer} from "mobx-react-lite";
 import QuestionAdmin from "../../components/admin/menuItem/questionAdmin.jsx";
+import QuestionQuizzAdmin from "../../components/admin/menuItem/qestionQuizzAdmin.jsx";
+import GameAdmin from "../../components/admin/menuItem/gameAdmin.jsx";
 
 const PLANS = {
     trip: TripAdmin,
     timer: TimerAdmin,
     users: UsersAdmin,
     addresses: AddressesPage,
-    questions: QuestionAdmin,
+    questionsDetective: QuestionAdmin,
+    questionsQuizz: QuestionQuizzAdmin,
+    games: GameAdmin,
 }
 
 const AdminPage = () => {

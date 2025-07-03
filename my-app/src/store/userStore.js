@@ -3,7 +3,9 @@ export  default  class UserStore{
     constructor() {
         this._isAuth = false
         this._user = {}
+        this._active = null
         this._trips = []
+        this._game = {}
 
         makeAutoObservable(this)
     }
@@ -16,8 +18,16 @@ export  default  class UserStore{
         this._user = user
 
     }
+    setActive(active){
+        this._active = active
+
+    }
     setTrips(trips){
         this._trips = trips
+
+    }
+    setGame(game){
+        this._game = game
 
     }
 
@@ -28,8 +38,16 @@ export  default  class UserStore{
     get user(){
         return this._user
     }
+
+    get active(){
+        return this._active
+    }
     get trips(){
         return this._trips
+    }
+
+    get game(){
+        return this._game
     }
 
 

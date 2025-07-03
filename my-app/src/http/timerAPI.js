@@ -5,8 +5,8 @@ export const getTimer = async () => {
     return data
 }
 
-export const postTimer = async (hours, minutes) => {
-    const response = await $authHost.post('api/timer', {hours, minutes});
+export const postTimer = async (hours, minutes, gameId) => {
+    const response = await $authHost.post('api/timer', {hours, minutes, gameId});
     return response.data;
 }
 

@@ -107,11 +107,47 @@ const AnswerModalAdmin = ({open, onCancel, answerId}) => {
             setLoading(true);
             getAnsewrsAPI(answerId)
                 .then((response) => {
-                    question.setAnswers(response);
-                    const formValues = {};
-                    response.forEach((answer, index) => {
-                        formValues[`result${index}`] = answer.pointsAwarded;
+                    // Добавим новое поле "correctness"
+                    const enrichedAnswers = response.map((answer) => {
+                        const {answer: userAnswer, question: q} = answer;
+                        const maxPoints = q.numberPoints;
+                        const answerOptions = q.answerOptions;
+
+                        let points = null;
+                        let correctness = null;
+
+                        if (answerOptions && answerOptions.length > 0) {
+                            const rightAnswers = answerOptions
+                                .filter(opt => opt.right)
+                                .map(opt => opt.answerOptions.trim().toLowerCase());
+
+                            const trimmedUserAnswer = (userAnswer || '').trim().toLowerCase();
+
+                            if (rightAnswers.includes(trimmedUserAnswer)) {
+                                points = maxPoints;
+                                correctness = true;
+                            } else {
+                                points = 0;
+                                correctness = false;
+                            }
+                        } else {
+                            points = answer.pointsAwarded;
+                        }
+
+                        return {
+                            ...answer,
+                            pointsAwarded: points,
+                            _correctness: correctness // временное поле для отображения смайлика
+                        };
                     });
+
+                    question.setAnswers(enrichedAnswers);
+
+                    const formValues = {};
+                    enrichedAnswers.forEach((a, i) => {
+                        formValues[`result${i}`] = a.pointsAwarded;
+                    });
+
                     form.setFieldsValue(formValues);
                 })
                 .catch((error) => {
@@ -129,6 +165,7 @@ const AnswerModalAdmin = ({open, onCancel, answerId}) => {
                 });
         }
     }, [update, answerId]);
+
 
     return (
         <Modal
@@ -151,7 +188,13 @@ const AnswerModalAdmin = ({open, onCancel, answerId}) => {
                             variant="borderless"
                             size={"small"}
                         >
-                            <Text level={5}>{answer.answer}</Text>
+                            <Text level={5}>
+                                {answer.answer}{' '}
+                                {answer._correctness === true && <span style={{color: 'green'}}>✅</span>}
+                                {answer._correctness === false && <span style={{color: 'red'}}>❌</span>}
+                            </Text>
+
+
                             <Divider/>
                             <Form.Item
                                 label={"Баллы:"}

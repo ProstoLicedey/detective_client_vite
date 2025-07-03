@@ -1,24 +1,26 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { Context } from "../../../index.jsx";
-import { getQuestionsAPI, deleteQuestionAPI } from "../../../http/questionAPI.js";
-import { Button, ConfigProvider, notification, Popconfirm, Table, Typography } from "antd";
-import { DeleteOutlined } from "@ant-design/icons";
-import Title from "antd/es/typography/Title";
-import ruRu from "antd/locale/ru_RU";
+import React, {useContext, useEffect, useState} from 'react';
+import {Button, ConfigProvider, notification, Popconfirm, Table} from "antd";
+import {Context} from "../../../index.jsx";
+import {deleteQuestionAPI} from "../../../http/questionAPI.js";
+import {DeleteOutlined} from "@ant-design/icons";
+import Title from "antd/es/typography/Title.js";
+import ruRu from "antd/locale/ru_RU.js";
 import QuestionModal from "./questionModal.jsx";
-import { observer } from "mobx-react-lite";
+import {observer} from "mobx-react-lite";
+import {deleteQuestionsQuizzOptionsAPI, getQuestionsQuizzAPI} from "../../../http/questionQuizzAPI.js";
+import QuestionOptionModal from "./questionOptionModal.jsx";
 
-const { Text } = Typography;
-
-const QuestionAdmin = () => {
+const QestionQuizzAdmin = () => {
+    const [optionModalVisible, setOptionModalVisible] = useState(false);
+    const [selectedQuestionId, setSelectedQuestionId] = useState(null);
     const [update, setUpdate] = useState(0);
     const [modal, setModal] = useState(false);
     const [loading, setLoading] = useState(true);
     const [notif, contextHolder] = notification.useNotification(); // уведомления через хук
-    const { question } = useContext(Context);
+    const {question} = useContext(Context);
 
     useEffect(() => {
-        getQuestionsAPI()
+        getQuestionsQuizzAPI()
             .then((response) => {
                 question.setQuestions(response);
                 setLoading(false);
@@ -30,27 +32,22 @@ const QuestionAdmin = () => {
                     message: errorMessage,
                 });
             });
-    }, [update, notif, question]); // добавлено notif в зависимости
+    }, [update, notif, question]);
 
-    function deleteUser(id) {
+    const handleDeleteOptions = (questionId) => {
         setLoading(true);
-        deleteQuestionAPI(id)
+        deleteQuestionsQuizzOptionsAPI(questionId)
             .then(() => {
-                setLoading(false);
+                notif.success({ message: "Варианты ответа удалены" });
                 setUpdate(update + 1);
-                notif.success({
-                    message: 'Вопрос удалён',
-                });
             })
             .catch((error) => {
-                setLoading(false);
-                setUpdate(update + 1);
-                const errorMessage = error?.response?.data?.message || 'Произошла ошибка при выполнении запроса.';
-                notif.error({
-                    message: errorMessage,
-                });
-            });
-    }
+                const errorMessage = error?.response?.data?.message || 'Ошибка при удалении вариантов ответа.';
+                notif.error({ message: errorMessage });
+            })
+            .finally(() => setLoading(false));
+    };
+
 
     function deleteUser(id) {
         setLoading(true)
@@ -78,29 +75,78 @@ const QuestionAdmin = () => {
             });
 
     }
+
     const columns = [
         {
             title: 'Номер',
             dataIndex: 'id',
             key: 'id',
-            width: '10%',
+            width: '7%',
         },
         {
             title: 'Вопрос',
             dataIndex: 'question',
             key: 'question',
-            width: '65%',
+            width: '28%',
+        },
+        {
+            title: 'Игра',
+            key: 'game',
+            width: '27%',
+            render: (_, record) => record.game?.name || '—',
         },
         {
             title: 'Количество баллов',
             dataIndex: 'numberPoints',
             key: 'numberPoints',
+            width: '7%',
+
+        },
+        {
+            title: 'Вариантов ответа',
+            dataIndex: 'answerOptions',
+            key: 'answerOptions',
             width: '10%',
+            render: (_, record) => {
+                const hasOptions = Array.isArray(record.answerOptions) && record.answerOptions.length > 0;
+
+                if (hasOptions) {
+                    return (
+                        <Popconfirm
+                            title="Варианты ответа уже заданы. Удалить их?"
+                            onConfirm={() => handleDeleteOptions(record.id)}
+                            okText="Удалить"
+                            cancelText="Отмена"
+                            placement="top"
+                            okButtonProps={{style: {backgroundColor: '#a8071a'}}}
+                            icon={<DeleteOutlined style={{ color: 'red' }} />}
+                        >
+                            <Button ghost style={{ width: '100%' }}>
+                                {record.answerOptions.length}
+                            </Button>
+                        </Popconfirm>
+                    );
+                } else {
+                    // Если вариантов нет, просто открываем модальное окно
+                    return (
+                        <Button
+                            ghost
+                            style={{ width: '100%' }}
+                            onClick={() => {
+                                setSelectedQuestionId(record.id);
+                                setOptionModalVisible(true);
+                            }}
+                        >
+                            Добавить +
+                        </Button>
+                    );
+                }
+            },
         },
         {
             title: '',
             key: 'delete',
-            width: '15%',
+            width: '10%',
             sortDirections: ['descend', 'ascend'],
             render: (issued, record) => (
                 <Popconfirm
@@ -109,23 +155,23 @@ const QuestionAdmin = () => {
                     okText="Удалить"
                     cancelText="Отмена"
                     placement="left"
-                    icon={<DeleteOutlined />}
-                    okButtonProps={{ style: { backgroundColor: '#a8071a' } }}
+                    icon={<DeleteOutlined/>}
+                    okButtonProps={{style: {backgroundColor: '#a8071a'}}}
                 >
-                    <Button style={{ backgroundColor: '#820014' }} type="primary">Удалить</Button>
+                    <Button style={{backgroundColor: '#820014'}} type="primary">Удалить</Button>
                 </Popconfirm>
             ),
         },
     ];
 
     return (
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <div style={{ width: '96%', marginLeft: '2%', marginRight: '2%', maxWidth: 800 }}>
-                <Title style={{ color: '#FFFFFFD9', textAlign: 'center' }} level={2}>Вопросы детективной игры</Title>
+        <div style={{display: 'flex', justifyContent: 'center'}}>
+            <div style={{width: '96%', marginLeft: '2%', marginRight: '2%', maxWidth: 800}}>
+                <Title style={{color: '#FFFFFFD9', textAlign: 'center'}} level={2}>Вопросы квизового формата </Title>
                 <Button
                     onClick={() => setModal(true)}
                     size={"large"}
-                    style={{ backgroundColor: '#3f6600', margin: 10 }}
+                    style={{backgroundColor: '#3f6600', margin: 10}}
                     type={"primary"}
                 >
                     Добавить вопрос +
@@ -161,7 +207,7 @@ const QuestionAdmin = () => {
                             },
                         })}
                         bordered
-                        style={{ overflowX: 'auto', background: '#2B2D30' }}
+                        style={{overflowX: 'auto', background: '#2B2D30'}}
                         columns={columns}
                         dataSource={question.questions}
                         rowKey="id"
@@ -175,11 +221,20 @@ const QuestionAdmin = () => {
                     setUpdate(update + 1);
                     setModal(false);
                 }}
-                quizzChech={false}
+                quizzChech={true}
             />
+            <QuestionOptionModal
+                open={optionModalVisible}
+                onCancel={() => {
+                    setUpdate(update + 1);
+                    setOptionModalVisible(false);
+                }}
+                questionId={selectedQuestionId}
+            />
+
             {contextHolder}
         </div>
     );
 };
 
-export default observer(QuestionAdmin);
+export default observer(QestionQuizzAdmin);

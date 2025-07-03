@@ -6,6 +6,7 @@ export  default  class AdminStore{
         this._trips = []
         this._users = []
         this._addresses = []
+        this._games = []
 
         makeAutoObservable(this)
     }
@@ -14,6 +15,7 @@ export  default  class AdminStore{
         this._timeFinish = timeFinish
 
     }
+
     setTimerActive(bool){
         this._timerActive = bool
 
@@ -30,7 +32,10 @@ export  default  class AdminStore{
         this._addresses = addresses
 
     }
+    setGames(games){
+        this._games = games
 
+    }
     get timeFinish(){
         return this._timeFinish
     }
@@ -45,6 +50,10 @@ export  default  class AdminStore{
     }
     get addresses(){
         return this._addresses
+    }
+
+    get games(){
+        return this._games
     }
 
 }

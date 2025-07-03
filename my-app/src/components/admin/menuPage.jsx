@@ -1,44 +1,35 @@
-import React, { useState } from 'react';
-import { Menu } from "antd";
+import React, {useState} from 'react';
+import {Menu} from "antd";
 import {
-    AppstoreOutlined, BarChartOutlined,
     CarOutlined,
-    ClockCircleOutlined, HomeOutlined,
-    MailOutlined,
-    OrderedListOutlined, QuestionCircleOutlined, TeamOutlined,
-    UserOutlined
+    ClockCircleOutlined,
+    QuestionCircleOutlined,
+    QuestionOutlined,
+    SearchOutlined,
+    TeamOutlined
 } from "@ant-design/icons";
+import SubMenu from "antd/es/menu/SubMenu.js";
 
 const items = [
     {
         label: 'Поездки',
         key: 'trip',
-        icon: <CarOutlined />,
+        icon: <CarOutlined/>,
     },
     {
-        label: 'Таймер',
+        label: 'Процесс игры',
         key: 'timer',
-        icon: <ClockCircleOutlined />,
+        icon: <ClockCircleOutlined/>,
     },
     {
         label: 'Команды',
         key: 'users',
-        icon: <TeamOutlined />,
-    },
-    {
-        label: 'Адреса',
-        key: 'addresses',
-        icon: <HomeOutlined /> ,
-    },
-    {
-        label: 'Вопросы',
-        key: 'questions',
-        icon: <QuestionCircleOutlined /> ,
+        icon: <TeamOutlined/>,
     },
 ];
 
 const MenuPage = ({hash}) => {
-    const [current, setCurrent] = useState(hash ? hash :'trip');
+    const [current, setCurrent] = useState(hash ? hash : 'trip');
 
     const onClick = (e) => {
         if (e.key === undefined) {
@@ -50,25 +41,53 @@ const MenuPage = ({hash}) => {
         }
         window.location.hash = e.key;
         //close()
-        setCurrent(e.key) ;
+        setCurrent(e.key);
     };
     return (
         <Menu
             onClick={onClick}
             selectedKeys={[current]}
             mode="horizontal"
-            style={{ backgroundColor: '#2B2D30' }}
-
+            style={{backgroundColor: '#2B2D30'}}
+            theme="dark"
         >
             {items.map(item => (
                 <Menu.Item
                     key={item.key}
                     icon={item.icon}
-                    style={{ color: '#FFFFFFD9', backgroundColor: '#2B2D30' }}
+                    mode="vertical"
+                    style={{color: '#FFFFFFD9', backgroundColor: '#2B2D30'}}
                 >
                     {item.label}
                 </Menu.Item>
             ))}
+            <SubMenu
+                theme="dark"
+                key="detective"
+                icon={<SearchOutlined/>}
+                title="Квиз игры"
+                style={{color: '#FFFFFFD9', backgroundColor: '#2B2D30'}}
+            >
+                <Menu.Item key="games" >
+                    Игры
+                </Menu.Item>
+                <Menu.Item key="questionsQuizz">
+                    Вопросы
+                </Menu.Item>
+            </SubMenu>
+            <SubMenu
+                theme="dark"
+                key="quizz"
+                icon={<QuestionCircleOutlined/>}
+                title="Детективная игра"
+                style={{color: '#FFFFFFD9', backgroundColor: '#2B2D30'}}>
+                <Menu.Item key="addresses">
+                    Адреса
+                </Menu.Item>
+                <Menu.Item key="questionsDetective">
+                    Вопросы детектива
+                </Menu.Item>
+            </SubMenu>
         </Menu>
     );
 };

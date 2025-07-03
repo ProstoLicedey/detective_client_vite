@@ -1,16 +1,16 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { Context } from "../../../index.jsx";
-import { getQuestionsAPI, deleteQuestionAPI } from "../../../http/questionAPI.js";
-import { Button, ConfigProvider, notification, Popconfirm, Table, Typography } from "antd";
-import { DeleteOutlined } from "@ant-design/icons";
-import Title from "antd/es/typography/Title";
-import ruRu from "antd/locale/ru_RU";
+import React, {useContext, useEffect, useState} from 'react';
+import {Button, ConfigProvider, notification, Popconfirm, Table} from "antd";
+import {Context} from "../../../index.jsx";
+import {deleteQuestionAPI, getQuestionsAPI} from "../../../http/questionAPI.js";
+import {DeleteOutlined} from "@ant-design/icons";
 import QuestionModal from "./questionModal.jsx";
-import { observer } from "mobx-react-lite";
+import Title from "antd/es/typography/Title.js";
+import ruRu from "antd/locale/ru_RU.js";
+import {observer} from "mobx-react-lite";
+import {gameDeleteAPI, getGames} from "../../../http/gameAPI.js";
+import GamesModal from "./gamesModal.jsx";
 
-const { Text } = Typography;
-
-const QuestionAdmin = () => {
+const GameAdmin = () => {
     const [update, setUpdate] = useState(0);
     const [modal, setModal] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -18,7 +18,7 @@ const QuestionAdmin = () => {
     const { question } = useContext(Context);
 
     useEffect(() => {
-        getQuestionsAPI()
+        getGames()
             .then((response) => {
                 question.setQuestions(response);
                 setLoading(false);
@@ -52,9 +52,9 @@ const QuestionAdmin = () => {
             });
     }
 
-    function deleteUser(id) {
+    function deleteGame(id) {
         setLoading(true)
-        deleteQuestionAPI(id)
+        gameDeleteAPI(id)
             .then((response) => {
                 setLoading(false)
                 setUpdate(update + 1)
@@ -83,18 +83,18 @@ const QuestionAdmin = () => {
             title: 'Номер',
             dataIndex: 'id',
             key: 'id',
-            width: '10%',
+            width: '5%',
         },
         {
-            title: 'Вопрос',
-            dataIndex: 'question',
-            key: 'question',
+            title: 'Игра',
+            dataIndex: 'name',
+            key: 'name',
             width: '65%',
         },
         {
-            title: 'Количество баллов',
-            dataIndex: 'numberPoints',
-            key: 'numberPoints',
+            title: 'Количество вопросов в игре',
+            dataIndex: 'questionsCount',
+            key: 'questionsCount',
             width: '10%',
         },
         {
@@ -104,8 +104,9 @@ const QuestionAdmin = () => {
             sortDirections: ['descend', 'ascend'],
             render: (issued, record) => (
                 <Popconfirm
-                    title={`Удалить вопрос?`}
-                    onConfirm={() => deleteUser(record.id)}
+                    title={`Удалить игру?`}
+                    description={'Все вопросы игры будут также удалены'}
+                    onConfirm={() => deleteGame(record.id)}
                     okText="Удалить"
                     cancelText="Отмена"
                     placement="left"
@@ -121,14 +122,14 @@ const QuestionAdmin = () => {
     return (
         <div style={{ display: 'flex', justifyContent: 'center' }}>
             <div style={{ width: '96%', marginLeft: '2%', marginRight: '2%', maxWidth: 800 }}>
-                <Title style={{ color: '#FFFFFFD9', textAlign: 'center' }} level={2}>Вопросы детективной игры</Title>
+                <Title style={{ color: '#FFFFFFD9', textAlign: 'center' }} level={2}>Игры</Title>
                 <Button
                     onClick={() => setModal(true)}
                     size={"large"}
                     style={{ backgroundColor: '#3f6600', margin: 10 }}
                     type={"primary"}
                 >
-                    Добавить вопрос +
+                    Добавить игру +
                 </Button>
                 <ConfigProvider
                     locale={ruRu}
@@ -169,17 +170,15 @@ const QuestionAdmin = () => {
                 </ConfigProvider>
             </div>
 
-            <QuestionModal
+            <GamesModal
                 open={modal}
                 onCancel={() => {
                     setUpdate(update + 1);
                     setModal(false);
                 }}
-                quizzChech={false}
             />
             {contextHolder}
         </div>
     );
 };
-
-export default observer(QuestionAdmin);
+export default observer(GameAdmin);

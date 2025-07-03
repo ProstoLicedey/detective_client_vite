@@ -79,18 +79,7 @@ const HeaderPage = () => {
                    preview={false}
                    alt="Логотип сайта"
             />
-            {!isMobile && (<Title
-                style={{
-                    color: '#FFFFFFD9',
-                    marginTop: '0.3vw',
-                    marginBottom: '0.3vw',
-                    userSelect: 'none',
-                    whiteSpace: 'nowrap',
-                }}
-                level={3}
-            >
-                Детектив ТоДо
-            </Title>)}
+
         </div>
 
         <Timer header={true}/>

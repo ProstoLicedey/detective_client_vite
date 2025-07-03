@@ -1,24 +1,37 @@
-import React, { useContext, useState } from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import Title from "antd/es/typography/Title";
 import dayjs from "dayjs";
-import { TimePicker, Button, Popconfirm, notification } from "antd";
+import {TimePicker, Button, Popconfirm, notification, Select, Space} from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import { Context } from "../../../index.jsx";
 import { deleteTimerAPI, postTimer } from "../../../http/timerAPI.js";
+import {getQuestionsAPI} from "../../../http/questionAPI.js";
+import {getGames} from "../../../http/gameAPI.js";
+import {observer} from "mobx-react-lite";
 
 const TimerAdmin = () => {
-    const { timer } = useContext(Context);
+    const { timer, admin } = useContext(Context);
+    const [selectedGameId, setSelectedGameId] = useState(null);
     const [timerValue, setTimerValue] = useState(dayjs('02:00', 'HH:mm'));
     const [loading, setLoading] = useState(false);
     const [notif, contextHolder] = notification.useNotification();
 
-    const deleteTimer = async () => {
-        if (!timer.timerActive) {
-            notif.error({
-                message: "Сейчас нет активных таймеров",
+    useEffect(() => {
+        getGames()
+            .then((response) => {
+                admin.setGames(response);
+                setLoading(false);
+            })
+            .catch((error) => {
+                setLoading(false);
+                const errorMessage = error?.response?.data?.message || 'Произошла ошибка при выполнении запроса.';
+                notif.error({
+                    message: errorMessage,
+                });
             });
-            return;
-        }
+    }, []);
+
+    const deleteTimer = async () => {
 
         try {
             await deleteTimerAPI();
@@ -41,13 +54,27 @@ const TimerAdmin = () => {
             return;
         }
 
+        if (timer.timerActive) {
+            notif.error({
+                message: "Таймер уже запущен",
+                description: 'Если вы хотите его перезапустить, сначала удалите текущий таймер'
+            });
+            return;
+        }
+
+        if (selectedGameId == null) {
+            notif.error({
+                message: "Выберите игру для запуска",
+            });
+            return;
+        }
         setLoading(true);
 
         const hours = timerValue.hour();
         const minutes = timerValue.minute();
 
         try {
-            await postTimer(hours, minutes);
+            await postTimer(hours, minutes, selectedGameId);
             notif.success({
                 message: 'Таймер успешно запущен',
             });
@@ -63,7 +90,7 @@ const TimerAdmin = () => {
     return (
         <div style={{ margin: '2%', display: 'flex', justifyContent: 'center' }}>
             {contextHolder}
-            <div style={{ maxWidth: 400, padding: '2%', width: '100%', backgroundColor: '#1E1F22' }}>
+            <Space  direction={'vertical'} style={{ maxWidth: 400, padding: '2%', width: '100%', backgroundColor: '#1E1F22' }}>
                 <Title style={{ color: '#FFFFFFD9', textAlign: 'center' }} level={2}>Таймер</Title>
                 <TimePicker
                     value={timerValue}
@@ -71,6 +98,16 @@ const TimerAdmin = () => {
                     size="large"
                     style={{ width: '100%' }}
                     onChange={value => setTimerValue(value)}
+                />
+                <Select
+                    onChange={setSelectedGameId}
+                    placeholder={"выберите игру"}
+                    defaultValue={selectedGameId}
+                    style={{ width: '100%' }}
+                    options={admin.games.map(game => ({
+                        label: game.name,
+                        value: game.id
+                    }))}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
                     <Popconfirm
@@ -101,10 +138,10 @@ const TimerAdmin = () => {
                         Запустить
                     </Button>
                 </div>
-            </div>
+            </Space>
             {contextHolder}
         </div>
     );
 };
 
-export default TimerAdmin;
+export default observer(TimerAdmin);

@@ -21,9 +21,9 @@ export  const  deleteQuestionAPI = async (id) =>{
     return data
 }
 
-export  const  createQuestionAPI = async (question, numberPoints) =>{
+export  const  createQuestionAPI = async (question, numberPoints, gameId) =>{
 
-    return  await $host.post('api/questions/', {question, numberPoints})
+    return  await $host.post('api/questions/', {question, numberPoints, gameId})
 
 }
 
