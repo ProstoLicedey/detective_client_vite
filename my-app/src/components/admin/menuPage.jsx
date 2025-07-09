@@ -12,9 +12,9 @@ import SubMenu from "antd/es/menu/SubMenu.js";
 
 const items = [
     {
-        label: 'Поездки',
-        key: 'trip',
-        icon: <CarOutlined/>,
+        label: 'Команды',
+        key: 'users',
+        icon: <TeamOutlined/>,
     },
     {
         label: 'Процесс игры',
@@ -22,14 +22,14 @@ const items = [
         icon: <ClockCircleOutlined/>,
     },
     {
-        label: 'Команды',
-        key: 'users',
-        icon: <TeamOutlined/>,
+        label: 'Поездки',
+        key: 'trip',
+        icon: <CarOutlined/>,
     },
 ];
 
 const MenuPage = ({hash}) => {
-    const [current, setCurrent] = useState(hash ? hash : 'trip');
+    const [current, setCurrent] = useState(hash ? hash : 'users');
 
     const onClick = (e) => {
         if (e.key === undefined) {
@@ -40,7 +40,7 @@ const MenuPage = ({hash}) => {
             return;
         }
         window.location.hash = e.key;
-        //close()
+
         setCurrent(e.key);
     };
     return (

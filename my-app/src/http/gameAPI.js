@@ -5,10 +5,13 @@ export const getGames = async () => {
     return data
 }
 
-export const getGameAPI = async (id) => {
-    const {data} = await $host.get('/api/games/' + id)
-    return data
-}
+export const getGameAPI = async (id, userId) => {
+    const { data } = await $host.get(`/api/games/${id}`, {
+        params: { userId }
+    });
+    return data;
+};
+
 
 
 export const getActiveGameAPI = async () => {

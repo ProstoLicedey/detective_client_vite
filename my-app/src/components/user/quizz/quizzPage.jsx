@@ -1,23 +1,28 @@
-import React, {useContext, useEffect, useState} from "react";
-import {getGameAPI} from "../../../http/gameAPI.js";
-import {Context} from "../../../index.jsx";
-import {Button, Input, notification, Radio, Space, Typography} from "antd";
-import {observer} from "mobx-react-lite";
-import {saveQuizzAnswerAPI} from "../../../http/questionQuizzAPI.js";
+import React, { useContext, useEffect, useState } from "react";
+import { getGameAPI } from "../../../http/gameAPI.js";
+import { Context } from "../../../index.jsx";
+import { Button, Input, notification, Radio, Typography } from "antd";
+import { observer } from "mobx-react-lite";
+import { saveQuizzAnswerAPI } from "../../../http/questionQuizzAPI.js";
 
-const {Title, Text} = Typography;
+const { Title, Text } = Typography;
 
 const QuizzPage = () => {
-    const {user, timer} = useContext(Context);
+    const { user, timer } = useContext(Context);
     const [notif, contextHolder] = notification.useNotification();
     const [loading, setLoading] = useState(false);
-    const [answers, setAnswers] = useState({});
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [answer, setAnswer] = useState("");
+    const [isFinished, setIsFinished] = useState(false);
 
     useEffect(() => {
         setLoading(true);
-        getGameAPI(user.active)
+        getGameAPI(user.active, user.user.id)
             .then((response) => {
                 user.setGame(response);
+                setCurrentIndex(0);
+                setAnswer("");
+                setIsFinished(false);
                 setLoading(false);
             })
             .catch((error) => {
@@ -25,45 +30,70 @@ const QuizzPage = () => {
                 const errorMessage =
                     error?.response?.data?.message ||
                     "Произошла ошибка при выполнении запроса.";
-                notif.error({message: errorMessage});
+                notif.error({ message: errorMessage });
             });
     }, [timer.timerActive]);
 
     if (!user.game || !user.game.questions || user.game.questions.length === 0) {
         return (
-            <div style={{textAlign: "center", marginTop: 50, color: "#FFFFFFD9"}}>
-                <Title level={3}>Вопросы отсутствуют</Title>
+            <div style={{ textAlign: "center", marginTop: 100 }}>
+                <Title level={2} style={{ color: "#FFFFFFD9" }}>Вопросы отсутствуют</Title>
+                <Text style={{ fontSize: 18, color: "#FFFFFFD9" }}>Попробуйте позже или выберите другую игру.</Text>
             </div>
         );
     }
 
-    const onRadioChange = (questionId, value) => {
-        setAnswers((prev) => ({...prev, [questionId]: value}));
-    };
+    if (isFinished) {
+        return (
+            <div style={{ textAlign: "center", marginTop: 100 }}>
+                <Title level={2} style={{ color: "#FFFFFFD9" }}>Тест завершён</Title>
+                <Text style={{ fontSize: 18, color: "#FFFFFFD9" }}>Спасибо за участие!</Text>
+            </div>
+        );
+    }
 
-    const onInputChange = (questionId, value) => {
-        setAnswers((prev) => ({...prev, [questionId]: value}));
-    };
 
-    const onSaveAll = async () => {
-        const unanswered = user.game.questions.filter((q) => !answers[q.id] || answers[q.id].toString().trim() === "");
-        if (unanswered.length > 0) {
-            notif.error({message: "Пожалуйста, ответьте на все вопросы."});
-            return;
-        }
+    const question = user.game.questions[currentIndex];
+    const hasOptions = Array.isArray(question.answerOptions) && question.answerOptions.length > 0;
 
-        const payload = Object.entries(answers).map(([questionId, text]) => ({
-            questionId: parseInt(questionId),
-            text: text.toString().trim()
-        }));
+    const saveAnswerAndNext = async (value) => {
+        const payload = [
+            {
+                questionId: question.id,
+                text: value.toString().trim()
+            }
+        ];
 
         try {
             await saveQuizzAnswerAPI(payload, user.user.id);
-            notif.success({message: "Ответы успешно сохранены"});
         } catch (error) {
-            const errorMessage = error?.response?.data?.message || "Не удалось сохранить ответы.";
-            notif.error({message: errorMessage});
+            const errorMessage =
+                error?.response?.data?.message || "Не удалось сохранить ответ.";
+            notif.error({ message: errorMessage });
+            return;
         }
+
+        // Переход к следующему вопросу или завершение
+        if (currentIndex + 1 < user.game.questions.length) {
+            setCurrentIndex(currentIndex + 1);
+            setAnswer("");
+        } else {
+            setIsFinished(true);
+        }
+    };
+
+    const handleRadioChange = (e) => {
+        const value = e.target.value;
+        setAnswer(value);
+        saveAnswerAndNext(value);
+    };
+
+    const handleTextSubmit = () => {
+        if (!answer.trim()) {
+            notif.error({ message: "Введите ответ перед отправкой." });
+            return;
+        }
+        saveAnswerAndNext(answer);
     };
 
     return (
@@ -81,83 +111,69 @@ const QuizzPage = () => {
                 {user.game.name}
             </Title>
 
-            <Space direction="vertical" style={{ width: "100%" }} size="large">
-                {user.game.questions.map((question, index) => {
-                    const hasOptions =
-                        Array.isArray(question.answerOptions) &&
-                        question.answerOptions.length > 0;
+            <div
+                style={{
+                    padding: 20,
+                    borderRadius: 8,
+                    background: "#2A2A2A",
+                    border: "1px solid #3a3a3a",
+                    marginTop: 30,
+                }}
+            >
+                <div>
+                    <Title level={4} style={{ color: "#FFFFFFD9", marginBottom: 5 }}>
+                        Вопрос № {currentIndex + 1}
+                    </Title>
+                    <Text style={{ fontSize: 18, color: "#FFFFFFD9" }}>
+                        {question.question}
+                    </Text>
+                </div>
 
-                    return (
-                        <div
-                            key={question.id}
+                {hasOptions ? (
+                    <Radio.Group
+                        onChange={handleRadioChange}
+                        value={answer}
+                        style={{ marginTop: 10 }}
+                    >
+                        {question.answerOptions.map((option) => (
+                            <Radio
+                                key={option.id}
+                                value={option.answerOptions}
+                                style={{
+                                    display: "block",
+                                    color: "#FFFFFFD9",
+                                }}
+                            >
+                                {option.answerOptions}
+                            </Radio>
+                        ))}
+                    </Radio.Group>
+                ) : (
+                    <>
+                        <Input.TextArea
+                            rows={3}
+                            placeholder="Введите ответ..."
+                            value={answer}
+                            onChange={(e) => setAnswer(e.target.value)}
                             style={{
-                                padding: 20,
-                                borderRadius: 8,
-                                background: "#2A2A2A",
-                                border: "1px solid #3a3a3a",
+                                backgroundColor: "#1E1F22",
+                                color: "#FFFFFFD9",
+                                marginTop: 10,
+                                borderColor: "#00000040",
                             }}
+                        />
+                        <Button
+                            type="primary"
+                            onClick={handleTextSubmit}
+                            style={{ marginTop: 15 }}
                         >
-                            <div>
-                                <Title level={4} style={{ color: "#FFFFFFD9", marginBottom: 5 }}>
-                                    № {index + 1}
-                                </Title>
-                                <Text style={{ fontSize: 18, color: "#FFFFFFD9" }}>
-                                    {question.question}
-                                </Text>
-                            </div>
-                            {hasOptions ? (
-                                <Radio.Group
-                                    onChange={(e) =>
-                                        onRadioChange(question.id, e.target.value)
-                                    }
-                                    value={answers[question.id]}
-                                    style={{ marginTop: 10 }}
-                                >
-                                    {question.answerOptions.map((option) => (
-                                        <Radio
-                                            key={option.id}
-                                            value={option.answerOptions}
-                                            style={{
-                                                display: "block",
-                                                color: "#FFFFFFD9",
-                                            }}
-                                        >
-                                            {option.answerOptions}
-                                        </Radio>
-                                    ))}
-                                </Radio.Group>
-                            ) : (
-                                <Input.TextArea
-                                    rows={3}
-                                    placeholder="Введите ответ..."
-                                    value={answers[question.id] || ""}
-                                    onChange={(e) =>
-                                        onInputChange(question.id, e.target.value)
-                                    }
-                                    style={{
-                                        backgroundColor: "#1E1F22",
-                                        color: "#FFFFFFD9",
-                                        marginTop: 10,
-                                        borderColor: "#00000040",
-                                    }}
-                                />
-                            )}
-                        </div>
-                    );
-                })}
-
-                <Button
-                    type="primary"
-                    onClick={onSaveAll}
-                    loading={loading}
-                    style={{ marginTop: 30, width: "100%" }}
-                >
-                    Сохранить все ответы
-                </Button>
-            </Space>
+                            Отправить ответ
+                        </Button>
+                    </>
+                )}
+            </div>
         </div>
     );
-
 };
 
 export default observer(QuizzPage);

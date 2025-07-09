@@ -25,9 +25,10 @@ const PLANS = {
     games: GameAdmin,
 }
 
+
 const AdminPage = () => {
     const hashValue = window.location.hash.substring(1);
-    const initialSelectedPlan = PLANS[hashValue] ? hashValue : 'trip';
+    const initialSelectedPlan = PLANS[hashValue] ? hashValue : 'users';
     const [selectedPlan, setSelectedPlan] = useState(initialSelectedPlan);
     const {admin, user} = useContext(Context)
 
